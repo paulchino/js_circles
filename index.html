@@ -2,6 +2,18 @@
 <head>
 	<title>Javascript Box - OOP demo</title>
 </head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<style type="text/css">
+#svg {
+	height:100vh;
+	min-width: 100vw;
+
+}
+
+</style>
+
+
 <body>
 
 	<svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -9,7 +21,10 @@
 	<script>
 	function Circle(cx, cy, html_id)
 	{
+		//circle id
 		var html_id = html_id;
+
+		//circle coordinates
 		this.info = { cx: cx,  cy: cy };
 		
 		//private function that generates a random number
@@ -17,34 +32,41 @@
 			return Math.random()*(max-min) + min;
 		}
 
+		//initialize includes the id, coord and add velocity, radius, and style
 		this.initialize = function(){
-			//give a random velocity for the circle
+			//give a random velocity for the circle.
+			//adds to the info object
 			this.info.velocity = {
 				x: randomNumberBetween(-3,3),
 				y: randomNumberBetween(-3,3)
 			}
 
-			//create a circle 
+			//create a circle
+
 			var circle = makeSVG('circle', 
 				{ 	cx: this.info.cx,
 				  	cy: this.info.cy,
 				  	r:  10,
 				  	id: html_id,
-				  	style: "fill: black"
+				  	style: "fill: blue"
 				});
 
 			document.getElementById('svg').appendChild(circle);
 		}
 
+
+
 		this.update = function(time){
+			//grab by the circle id
 			var el = document.getElementById(html_id);
 
+
 			//see if the circle is going outside the browser. if it is, reverse the velocity
-			if( this.info.cx > document.body.clientWidth || this.info.cx < 0)
+			if( this.info.cx +10 > document.body.clientWidth || this.info.cx -10  < 0)
 			{
 				this.info.velocity.x = this.info.velocity.x * -1;
 			}
-			if( this.info.cy > document.body.clientHeight || this.info.cy < 0)
+			if( this.info.cy +10> document.body.clientHeight || this.info.cy -10< 0)
 			{
 				this.info.velocity.y = this.info.velocity.y * -1;
 			}
@@ -66,12 +88,14 @@
 	        return el;
 	    }
 
+	    //this is the function that calls the circle
 	    this.initialize();
 	}
 
 	function PlayGround()
 	{
 		var counter = 0;  //counts the number of circles created
+		//circles array of objects circles {cx,cy,r,id,style }
 		var circles = [ ]; //array that will hold all the circles created in the app
 
 		//a loop that updates the circle's position on the screen
@@ -85,11 +109,11 @@
 		this.createNewCircle = function(x,y){
 			var new_circle = new Circle(x,y,counter++);
 			circles.push(new_circle);
-			// console.log('created a new circle!', new_circle);
+			console.log('created a new circle!', new_circle);
 		}
 
 		//create one circle when the game starts
-		this.createNewCircle(document.body.clientWidth/2, document.body.clientHeight/2);
+		this.createNewCircle(document.body.clientWidth, document.body.clientHeight);
 	}
 
 	var playground = new PlayGround();
