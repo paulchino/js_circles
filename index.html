@@ -4,30 +4,51 @@
 </head>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
 <style type="text/css">
 #svg {
 	height:100vh;
 	min-width: 100vw;
 
 }
-
 </style>
-
-
 <body>
-
 	<svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
-
 	<script>
+	var time_pressed = 30;
+	(function () {
+		var mousedown_time;
+
+		function getTime(){
+			var date = new Date();
+			return date.getTime();
+		}
+
+		document.onmousedown = function(e){
+			mousedown_time = getTime();
+		}
+		document.onmouseup = function(e){
+			time_pressed = getTime() - mousedown_time;
+			//console.log('You held your mouse down for', time_pressed, 'miliseconds.');
+			return time_pressed;
+		}
+	})();
+
 	function Circle(cx, cy, html_id)
 	{
-		//circle id
 		var html_id = html_id;
 
-		//circle coordinates
-		this.info = { cx: cx,  cy: cy };
-		
-		//private function that generates a random number
+		var randomColor = function() {
+			var letters = '0123456789ABCDEF'.split('');
+    		var color = '#';
+    		for (var i = 0; i < 6; i++ ) {
+        		color += letters[Math.floor(Math.random() * 16)];
+    		}
+    		return color;
+		}
+
+		this.info = { cx: cx,  cy: cy, r: time_pressed/6, id: html_id, style: 'fill:' + randomColor() };
+
 		var randomNumberBetween = function(min, max){
 			return Math.random()*(max-min) + min;
 		}
@@ -41,19 +62,16 @@
 				y: randomNumberBetween(-3,3)
 			}
 
-			//create a circle
-
 			var circle = makeSVG('circle', 
 				{ 	cx: this.info.cx,
 				  	cy: this.info.cy,
-				  	r:  10,
+				  	r:  this.info.r,
 				  	id: html_id,
-				  	style: "fill: blue"
+				  	style: this.info.style
 				});
 
 			document.getElementById('svg').appendChild(circle);
 		}
-
 
 
 		this.update = function(time){
@@ -62,11 +80,11 @@
 
 
 			//see if the circle is going outside the browser. if it is, reverse the velocity
-			if( this.info.cx +10 > document.body.clientWidth || this.info.cx -10  < 0)
+			if( (this.info.cx + this.info.r) > document.body.clientWidth || (this.info.cx - this.info.r)  < 0)
 			{
 				this.info.velocity.x = this.info.velocity.x * -1;
 			}
-			if( this.info.cy +10> document.body.clientHeight || this.info.cy -10< 0)
+			if( (this.info.cy + this.info.r)> document.body.clientHeight || (this.info.cy -this.info.r)< 0)
 			{
 				this.info.velocity.y = this.info.velocity.y * -1;
 			}
@@ -98,18 +116,53 @@
 		//circles array of objects circles {cx,cy,r,id,style }
 		var circles = [ ]; //array that will hold all the circles created in the app
 
+
+    	function collisions() {
+			for(var i=0;i<circles.length;i++) {
+				console.log(circles[i].info.cx);
+				for(var j=0;j<circles.length;j++) {
+					var x = Math.pow(circles[i].info.cx-circles[j].info.cx,2);
+					var y = Math.pow(circles[i].info.cy-circles[j].info.cy,2);
+
+					if ( Math.sqrt(x+y) <= (circles[i].info.r + circles[j].info.r) 
+				 	&& (i!=j) ) 
+				 	{
+						console.log('collision detected!');
+						console.log('index: ' + i);
+						console.log('index: ' + j);
+						//collIndex.push(i);
+						//collIndex.push(j);
+						$("#"+circles[i].info.id).remove();
+						$("#"+circles[j].info.id).remove();
+						circles.splice(i,1);
+						if(i>j) {
+							circles.splice(j,1);
+						}
+						else{
+							circles.splice(j-1,1);
+						}
+						return
+					}	
+				}
+			}
+		}
+
 		//a loop that updates the circle's position on the screen
 		this.loop = function(){
 			for(circle in circles)
 			{
 				circles[circle].update(1);
+				console.log(circles[circle].info);
+
+	
 			}
+			collisions();
 		}
 
 		this.createNewCircle = function(x,y){
 			var new_circle = new Circle(x,y,counter++);
 			circles.push(new_circle);
-			console.log('created a new circle!', new_circle);
+			//console.log('created a new circle!', new_circle);
 		}
 
 		//create one circle when the game starts
@@ -117,13 +170,12 @@
 	}
 
 	var playground = new PlayGround();
-	setInterval(playground.loop, 15);
+	setInterval(playground.loop, 10);
 
 	document.onclick = function(e) {
 		playground.createNewCircle(e.x,e.y);
 	}
 	
 	</script>
-
 </body>
 </html>
